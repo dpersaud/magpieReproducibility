@@ -4,11 +4,9 @@
 Created: Monday, February 20th, 2023
 Edited: Monday, March 17th, 2023
 Author: Daniel Persaud
-Description: This script cleans the featurized dataset and outputs a subset of the data which:
-- takes the lowest-energy compound for each unique composition
-- has a value for bandgap
-- has a bandgap energy between 0eV/atom and 1.5eV/atom
-- is a halogen
+Description:    This script will hyperparameter tune a random forest model using 10-fold random CV via GridSearchCV to 
+                obtain the best model parameters and in so doing, the best possible 10-fold random cross validation 
+                score to compare to the original paper.
 """
 
 import numpy as np

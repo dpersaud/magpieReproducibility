@@ -22,8 +22,8 @@ print('Packages imported successfully\n')
 #%%
 # IMPORT THE RAW DATA AND CLEAN IT SO ONLY THE NECCESSARY COLUMNS ARE LEFT---------------------------------------------
 
-# use pandas to read oqmd_all.data
-dfOQMD = pd.read_csv('data/script1_in_oqmd_all.data', sep='  ', engine='python')
+# use pandas to read oqmd.data
+dfOQMD = pd.read_csv('data/script1_in_oqmd.data', sep='  ', engine='python')
 # change the comp column name to strComposition
 dfOQMD = dfOQMD.rename(columns={'comp': 'strComposition'})
 print('OQMD data imported successfully')
@@ -89,7 +89,7 @@ print('Magpie features generated successfully for table 2\n')
 #%%
 # SAVE THE DATAFRAME TO A CSV FILE ------------------------------------------------------------------------------------
 
-dfOQMD.to_csv('data/script1_out_oqmd_all_featurized.csv', index=False)
+dfOQMD.to_csv('data/script1_out_oqmd_featurized.csv', index=False)
 dfBandgap.to_csv('data/script1_out_bandgap_featurized.csv', index=False)
 dfTable2.to_csv('data/script1_out_table2_featurized.csv', index=False)
 print('Data saved successfully')
