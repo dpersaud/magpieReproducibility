@@ -36,14 +36,11 @@ intLastMagpieCol = dfTrain.columns.get_loc(dfTrain.filter(regex='MagpieData').co
 # create a list of all the columns that contain 'MagpieData'
 lstFeatureCols = dfTrain.columns[intFirstMagpieCol:intLastMagpieCol+1].tolist()
 
-# make a string of the target column name
-strTarget = 'bandgap'
-
 # make the feature set
 dfTrain_x = dfTrain[lstFeatureCols]
 print('Feature set created')
 # make the target set
-dfTrain_y = dfTrain[strTarget]
+srTrain_y = dfTrain['bandgap']
 print('Target set created')
 print('--------------------------------------------------------------------------------------------\n')
 
@@ -78,13 +75,13 @@ hpt_rfReg = GridSearchCV(pipeline_rfReg, rfRegParamsGrid, scoring='neg_mean_abso
                          cv = 10, return_train_score = True, n_jobs = -1)
 
 # fit the grid search object to the training data
-hpt_rfReg.fit(dfTrain_x, dfTrain_y)
+hpt_rfReg.fit(dfTrain_x, srTrain_y)
 
 # make the results into a dataframe
-dfhpt_rfReg = pd.DataFrame(hpt_rfReg.cv_results_)
+dfHPT_rfReg = pd.DataFrame(hpt_rfReg.cv_results_)
 
 # save the results of the grid search to a csv file
-dfhpt_rfReg.to_csv('data/script3_out_rfCV.csv', index=False)
+dfHPT_rfReg.to_csv('data/script3_out_hpt.csv', index=False)
 
 print('Hyperparameter tuning complete')
 print('--------------------------------------------------------------------------------------------\n')
@@ -95,11 +92,11 @@ print('new cell:\n--------------------------------------------------------------
 print('Reading the results of the grid search and printing the best score...\n')
 
 # read the results of the grid search
-dfhpt_rfReg = pd.read_csv('data/script3_out_rfCV.csv', low_memory=False)
+dfHPT_rfReg = pd.read_csv('data/script3_out_modelSelectionTask.csv', low_memory=False)
 
 # find the index of the row with the best score
-intBestScoreIndex = dfhpt_rfReg['rank_test_score'].idxmin()
+intBestScoreIndex = dfHPT_rfReg['rank_test_score'].idxmin()
 
 # print the best score
-print('The best mean absolute error is: ', dfhpt_rfReg['mean_test_score'][intBestScoreIndex])
+print('The best mean absolute error is: ', dfHPT_rfReg['mean_test_score'][intBestScoreIndex])
 
