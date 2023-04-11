@@ -42,6 +42,10 @@ lstFeatureCols_train = dfTrain.columns[intFirstMagpieCol_train:intLastMagpieCol_
 # make the feature set
 dfTrain_x = dfTrain[lstFeatureCols_train]
 print('Training feature set created')
+# make a standardized version of the feature set
+stdScale = StandardScaler()
+dfTrain_x_std = pd.DataFrame(stdScale.fit_transform(dfTrain_x), columns = dfTrain_x.columns, index = dfTrain_x.index)
+print('Training feature set created')
 
 # make the target set
 srTrain_y = dfTrain['bandgap']
@@ -59,9 +63,11 @@ intLastMagpieCol_test = dfTest.columns.get_loc(dfTest.filter(regex='MagpieData')
 lstFeatureCols_test = dfTest.columns[intFirstMagpieCol_test:intLastMagpieCol_test+1].tolist()
 # make the feature set
 dfTest_x = dfTest[lstFeatureCols_test]
+# make a standardized version of the feature set
+dfTest_x_std = pd.DataFrame(stdScale.transform(dfTest_x), columns = dfTest_x.columns, index = dfTest_x.index)
 print('Test feature set created')
 
-
+# make the target set
 srTest_y = dfTest['bandgap']
 print('Test target set created')
 
@@ -111,9 +117,9 @@ for randomSeed in lstRandomSeeds:
                                               max_features = rfReg_max_features_weka,
                                               random_state = randomSeed)
       # fit the model to the training data
-      rfReg_weka_temp_fit = rfReg_weka_temp.fit(dfTrain_x, srTrain_y)
+      rfReg_weka_temp_fit = rfReg_weka_temp.fit(dfTrain_x_std, srTrain_y)
       # predict the bandgap of the test set
-      srTest_yPred_weka_temp = pd.Series(rfReg_weka_temp_fit.predict(dfTest_x), index = dfTest_x.index)
+      srTest_yPred_weka_temp = pd.Series(rfReg_weka_temp_fit.predict(dfTest_x_std), index = dfTest_x.index)
 
       # add the predictions as a new column to the dataframe
       dfTest_yPred_weka['Seed:' + str(randomSeed)] = srTest_yPred_weka_temp
@@ -131,6 +137,8 @@ dfTest_yPred_weka['max-mean'] = dfTest_yPred_weka['max'] - dfTest_yPred_weka['me
 # find the difference between the mean and min and make it a new column in the dataframe
 dfTest_yPred_weka['mean-min'] = dfTest_yPred_weka['mean'] - dfTest_yPred_weka['min']
 print('Production run with WEKA hyperparameters complete')
+# save the dataframe to a csv file
+dfTest_yPred_weka.to_csv('data/script4_out_test_yPred_weka.csv', index=False)
 print('--------------------------------------------------------------------------------------------\n')
 #%%
 # EVALUATION METRICS---------------------------------------------------------------------------------------------------
@@ -182,10 +190,10 @@ np.random.seed(0)
 pipeline_rfReg = make_pipeline(StandardScaler(),RandomForestRegressor(random_state=0))
 
 # make lists for possible values for hyperparameters
-rfReg_n_estimators_totest = [1, 10, 100, 1000]  # number of trees in forest
-rfReg_max_depth_totest = [1, 10, 100, 1000]     # the maximum depth of each tree
-rfReg_min_sample_leaf_totest = [1, 2, 5]                    # minimum number of samples required to be at a leaf node
-rfReg_min_sample_split_totest = [2, 4, 8]                   # minimum number of samples required to be at a leaf node
+rfReg_n_estimators_totest = [1, 5, 10, 50, 100, 500, 1000]  # number of trees in forest
+rfReg_max_depth_totest = [1, 5, 10, 50, 100, 500, 1000]     # the maximum depth of each tree
+rfReg_min_sample_leaf_totest = [1, 5, 10, 50]               # minimum number of samples required to be at a leaf node
+rfReg_min_sample_split_totest = [2, 4, 8, 10]               # minimum number of samples required to be at a leaf node
 rfReg_max_features_totest = [1/4, 1/3, 1/2, 2/3, 3/4, 1]    # number of features to consider when looking for the best split
 
 # put those lists into a dictionary to pass into GridSearchCV
@@ -198,7 +206,7 @@ rfRegParamsGrid = {'randomforestregressor__n_estimators'        :rfReg_n_estimat
 # make the grid search object - to comment out once the grid search has been run
 hpt_rfReg = GridSearchCV(pipeline_rfReg,
                          rfRegParamsGrid,
-                         scoring = 'neg_mean_absolute_error',
+                         scoring = 'neg_root_mean_squared_error',
                          cv = 10,
                          return_train_score = True, 
                          n_jobs = 20)
@@ -244,15 +252,8 @@ print('n_estimators: ', rfReg_n_estimators_best,
 
 # print the best score
 rfReg_score_best = np.array(dfHPT_rfReg.loc[dfHPT_rfReg['rank_test_score'] == 1, 'mean_test_score'])[0]
-print('Best mean absolute error: ', rfReg_score_best)
+print('Best root mean squared error: ', rfReg_score_best*-1)
 
-# # train a model with the best hyperparameters
-# rfReg_best = RandomForestRegressor(n_estimators = rfReg_n_estimators_best,
-#                                    max_depth = rfReg_max_depth_best,
-#                                    min_samples_leaf = rfReg_min_samples_leaf_best,
-#                                    min_samples_split = rfReg_min_samples_split_best,
-#                                    max_features = rfReg_max_features_best,
-#                                    random_state = 0)
 print('--------------------------------------------------------------------------------------------\n')
 
 #%%
@@ -275,8 +276,11 @@ MSE_diff = abs(np.array(np.array((dfHPT_rfReg.loc[(dfHPT_rfReg['param_randomfore
                                                                                                                                                                                                                                                                               (dfHPT_rfReg['param_randomforestregressor__min_samples_split'] == rfReg_min_samples_split_best)]['mean_test_score']*(-1))).reshape(len(rfReg_n_estimators_totest),len(rfReg_max_depth_totest))))
 
 # plot the results of the grid search
-pltHPT_rfReg_mse = ax[0].contourf(X, Y, MSE, 100, cmap='Reds', levels = 100)
-pltHPT_rfReg_mse_diff = ax[1].contourf(X, Y, MSE_diff, 100, cmap='Reds', levels = 100)
+pltHPT_rfReg_mse = ax[0].contourf(X, Y, MSE, 100, cmap='Blues', levels = 100)
+pltHPT_rfReg_mse_diff = ax[1].contourf(X, Y, MSE_diff, 100, cmap='Blues', levels = 100)
+#plot a red star at the best hyperparameters
+ax[0].plot(rfReg_n_estimators_best, rfReg_max_depth_best, 'r*', markersize=15, label='Best Hyperparameters')
+ax[1].plot(rfReg_n_estimators_best, rfReg_max_depth_best, 'r*', markersize=15, label='Best Hyperparameters')
 
 # add title and axis labels
 ax[0].set_title('Validation MAE', fontsize=16)
@@ -290,6 +294,10 @@ ax[1].set_xlabel('n_estimators', fontsize=14)
 ax[1].set_xscale('log')
 ax[1].set_ylabel('max_depth', fontsize=14)
 ax[1].set_yscale('log')
+
+# add legend
+ax[0].legend(loc='upper right', fontsize=14)
+ax[1].legend(loc='upper right', fontsize=14)
 
 # add colorbar
 cbar_rmse = fig.colorbar(pltHPT_rfReg_mse, ax=ax[0])
@@ -316,7 +324,6 @@ dfTest_yPred_best['strComposition'] = lstTestCompositions
 # initialize a counter to keep track of the number of runs
 runCount = 1
 
-
 for randomSeed in lstRandomSeeds:
       print('Run ', runCount, ' of 10')
       # make the random forest regressor
@@ -327,9 +334,9 @@ for randomSeed in lstRandomSeeds:
                                               max_features = rfReg_max_features_best,
                                               random_state = randomSeed)
       # fit the model to the training data
-      rfReg_best_temp_fit = rfReg_best_temp.fit(dfTrain_x, srTrain_y)
+      rfReg_best_temp_fit = rfReg_best_temp.fit(dfTrain_x_std, srTrain_y)
       # predict the bandgap of the test set
-      srTest_yPred_best_temp = pd.SeriesrfReg_best_temp_fit.predict(dfTest_x, index = dfTest_x.index)
+      srTest_yPred_best_temp = pd.Series(rfReg_best_temp_fit.predict(dfTest_x_std), index = dfTest_x.index)
 
       # add the predictions to the dataframe
       dfTest_yPred_best['Seed:' + str(randomSeed)] = srTest_yPred_best_temp
@@ -347,6 +354,9 @@ dfTest_yPred_best['max-mean'] = dfTest_yPred_best['max'] - dfTest_yPred_best['me
 # find the difference between the mean and min and make it a new column in the dataframe
 dfTest_yPred_best['mean-min'] = dfTest_yPred_best['mean'] - dfTest_yPred_best['min']
 print('Production run with the best hyperparameters complete')
+
+# save the dataframe to a csv file
+dfTest_yPred_best.to_csv('data/script4_out_test_yPred_best.csv', index=False)
 print('--------------------------------------------------------------------------------------------\n')
 
 #%%

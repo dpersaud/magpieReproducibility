@@ -122,7 +122,7 @@ print('Making the dataframe for the solar cell search...\n')
 # select the halogens from OQMD which has had duplicates removed
 dfOQMD_scs = dfOQMD_c[dfOQMD_c['strComposition'].str.contains('F|Cl|Br|I')]
 # select the bandgap values between 0eV/atom and 1.5eV/atom
-dfOQMD_scs = dfOQMD_scs[(dfOQMD_scs['bandgap'] >= 0) & (dfOQMD_scs['bandgap'] < 1.5)]
+dfOQMD_scs = dfOQMD_scs[(dfOQMD_scs['bandgap'] > 0) & (dfOQMD_scs['bandgap'] <= 1.5)]
 print('Solar cell search dataframe made')
 # save the cleaned data to a csv file
 dfOQMD_scs.to_csv('data/script2_out_oqmd_solarCellSearchTask.csv', index=False)
