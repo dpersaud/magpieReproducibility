@@ -201,7 +201,7 @@ hpt_rfReg = GridSearchCV(pipeline_rfReg,
                          scoring = 'neg_mean_absolute_error',
                          cv = 10,
                          return_train_score = True, 
-                         n_jobs = -1)
+                         n_jobs = 20)
 
 # fit the grid search object to the training data
 hpt_rfReg.fit(dfTrain_x, srTrain_y)
