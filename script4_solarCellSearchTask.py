@@ -206,7 +206,7 @@ rfRegParamsGrid = {'randomforestregressor__n_estimators'        :rfReg_n_estimat
 # make the grid search object - to comment out once the grid search has been run
 hpt_rfReg = GridSearchCV(pipeline_rfReg,
                          rfRegParamsGrid,
-                         scoring = 'neg_root_mean_squared_error',
+                         scoring = 'neg_mean_absolute_error',
                          cv = 10,
                          return_train_score = True, 
                          n_jobs = 20)
