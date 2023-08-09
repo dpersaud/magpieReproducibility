@@ -90,55 +90,58 @@ print('Random forest parameters from the WEKA defaults initialized')
 print('--------------------------------------------------------------------------------------------\n')
 
 #%%
-# PREDICT THE BANDGAP OF THE TEST SET WITH THE WEKA MODEL--------------------------------------------------------------
+# # PREDICT THE BANDGAP OF THE TEST SET WITH THE WEKA MODEL--------------------------------------------------------------
 print('new cell:\n--------------------------------------------------------------------------------------------')
 print('Starting \'production run\' with 10 runs with different random seeds on the model with WEKA hyperparameters...\n')
 
-# fix the random seed so the same 10 random numbers are generated each time
-np.random.seed(0)
-# generate 10 random numbers between 0 and 1000
-lstRandomSeeds = np.random.randint(0, 1000, 10).tolist()
+# # fix the random seed so the same 10 random numbers are generated each time
+# np.random.seed(0)
+# # generate 10 random numbers between 0 and 1000
+# lstRandomSeeds = np.random.randint(0, 1000, 10).tolist()
 
-# initialize a dataframe to store the predictions for each random seed
-dfTest_yPred_weka = pd.DataFrame()
-dfTest_yPred_weka['strComposition'] = lstTestCompositions
+# # initialize a dataframe to store the predictions for each random seed
+# dfTest_yPred_weka = pd.DataFrame()
+# dfTest_yPred_weka['strComposition'] = lstTestCompositions
 
-# initialize a counter to keep track of the number of runs
-runCount = 1
+# # initialize a counter to keep track of the number of runs
+# runCount = 1
 
 
-for randomSeed in lstRandomSeeds:
-      print('Run ', runCount, ' of 10')
-      # make the random forest regressor
-      rfReg_weka_temp = RandomForestRegressor(n_estimators = rfReg_n_estimators_weka,
-                                              max_depth = rfReg_max_depth_weka,
-                                              min_samples_leaf = rfReg_min_samples_leaf_weka,
-                                              min_samples_split = rfReg_min_samples_split_weka,
-                                              max_features = rfReg_max_features_weka,
-                                              random_state = randomSeed)
-      # fit the model to the training data
-      rfReg_weka_temp_fit = rfReg_weka_temp.fit(dfTrain_x_std, srTrain_y)
-      # predict the bandgap of the test set
-      srTest_yPred_weka_temp = pd.Series(rfReg_weka_temp_fit.predict(dfTest_x_std), index = dfTest_x.index)
+# for randomSeed in lstRandomSeeds:
+#       print('Run ', runCount, ' of 10')
+#       # make the random forest regressor
+#       rfReg_weka_temp = RandomForestRegressor(n_estimators = rfReg_n_estimators_weka,
+#                                               max_depth = rfReg_max_depth_weka,
+#                                               min_samples_leaf = rfReg_min_samples_leaf_weka,
+#                                               min_samples_split = rfReg_min_samples_split_weka,
+#                                               max_features = rfReg_max_features_weka,
+#                                               random_state = randomSeed)
+#       # fit the model to the training data
+#       rfReg_weka_temp_fit = rfReg_weka_temp.fit(dfTrain_x_std, srTrain_y)
+#       # predict the bandgap of the test set
+#       srTest_yPred_weka_temp = pd.Series(rfReg_weka_temp_fit.predict(dfTest_x_std), index = dfTest_x.index)
 
-      # add the predictions as a new column to the dataframe
-      dfTest_yPred_weka['Seed:' + str(randomSeed)] = srTest_yPred_weka_temp
-      # increment the counter
-      runCount += 1
+#       # add the predictions as a new column to the dataframe
+#       dfTest_yPred_weka['Seed:' + str(randomSeed)] = srTest_yPred_weka_temp
+#       # increment the counter
+#       runCount += 1
 
-# calculate the mean of the predictions for each random seed and make it a new column in the dataframe
-dfTest_yPred_weka['mean'] = dfTest_yPred_weka.iloc[:, 1:].mean(axis=1)
-# find the max of each prediction and make it a new column in the dataframe
-dfTest_yPred_weka['max'] = dfTest_yPred_weka.iloc[:, 1:].max(axis=1)
-# find the min of each prediction and make it a new column in the dataframe
-dfTest_yPred_weka['min'] = dfTest_yPred_weka.iloc[:, 1:].min(axis=1)
-# find the difference between the max and mean and make it a new column in the dataframe
-dfTest_yPred_weka['max-mean'] = dfTest_yPred_weka['max'] - dfTest_yPred_weka['mean']
-# find the difference between the mean and min and make it a new column in the dataframe
-dfTest_yPred_weka['mean-min'] = dfTest_yPred_weka['mean'] - dfTest_yPred_weka['min']
-print('Production run with WEKA hyperparameters complete')
-# save the dataframe to a csv file
-dfTest_yPred_weka.to_csv('data/script4_out_test_yPred_weka.csv', index=False)
+# # calculate the mean of the predictions for each random seed and make it a new column in the dataframe
+# dfTest_yPred_weka['mean'] = dfTest_yPred_weka.iloc[:, 1:].mean(axis=1)
+# # find the max of each prediction and make it a new column in the dataframe
+# dfTest_yPred_weka['max'] = dfTest_yPred_weka.iloc[:, 1:].max(axis=1)
+# # find the min of each prediction and make it a new column in the dataframe
+# dfTest_yPred_weka['min'] = dfTest_yPred_weka.iloc[:, 1:].min(axis=1)
+# # find the difference between the max and mean and make it a new column in the dataframe
+# dfTest_yPred_weka['max-mean'] = dfTest_yPred_weka['max'] - dfTest_yPred_weka['mean']
+# # find the difference between the mean and min and make it a new column in the dataframe
+# dfTest_yPred_weka['mean-min'] = dfTest_yPred_weka['mean'] - dfTest_yPred_weka['min']
+# print('Production run with WEKA hyperparameters complete')
+# # save the dataframe to a csv file
+# dfTest_yPred_weka.to_csv('data/script4_out_test_yPred_weka.csv', index=False)
+# read the results
+dfTest_yPred_weka = pd.read_csv('data/script4_out_test_yPred_weka.csv')
+print('Results from \'production run\' are complete')
 print('--------------------------------------------------------------------------------------------\n')
 #%%
 # EVALUATION METRICS---------------------------------------------------------------------------------------------------
@@ -153,26 +156,28 @@ print('The mean absolute error of the model is: ', wekaMAE)
 # PLOT THE RESULTS-----------------------------------------------------------------------------------------------------
 
 # setup subplot with 1 row and 1 column
-fig, ax = plt.subplots(1, 1, figsize=(7, 5), facecolor='w', edgecolor='k')
+fig, ax = plt.subplots(1, 1, figsize=(6, 6), facecolor='w', edgecolor='k')
 
 # plot the true bandgap values vs the strComposition
-ax.scatter(range(len(srTest_y)), srTest_y, color='tab:blue', label='True bandgap')
+ax.scatter(range(len(srTest_y)), srTest_y, color='tab:blue', s = 50,label='True bandgap')
 # plot the predicted bandgap values vs the strComposition with error bars
-ax.errorbar(range(len(srTest_y)), dfTest_yPred_weka['mean'], yerr=[dfTest_yPred_weka['mean-min'], dfTest_yPred_weka['max-mean']], color='tab:orange', label='Predicted bandgap', fmt='o', capsize=5)
+ax.errorbar(range(len(srTest_y)), dfTest_yPred_weka['mean'], yerr=[dfTest_yPred_weka['mean-min'], dfTest_yPred_weka['max-mean']], 
+            color='tab:orange', label='Predicted bandgap', fmt='o', capsize=5, capthick=2, elinewidth=2, ms=7.5)
 
 # set the x and y axis labels
-ax.set_xlabel('Composition', fontsize=12)
+ax.set_xlabel('Composition', fontsize=14, weight='bold')
 # make the x ticks the composition
 ax.set_xticks(range(len(srTest_y)))
-ax.set_xticklabels(lstTestCompositions, rotation=90, fontsize=12)
-ax.set_ylabel('Bandgap (eV)', fontsize=12)
-ax.set_yticklabels(ax.get_yticks(), fontsize=12)
+ax.set_xticklabels(lstTestCompositions, rotation=45, fontsize=12, weight='bold')
+
+ax.set_ylabel('Bandgap (eV)', fontsize=14, weight='bold')
+ax.set_yticklabels(ax.get_yticks(), fontsize=12, weight='bold')
 ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 # set the title
-ax.set_title('True vs Predicted Bandgap (WEKA model)', fontsize=14)
+ax.set_title('WEKA model', fontsize=16, weight='bold')
 
 # add a legend
-ax.legend()
+# ax.legend(loc='lower left', fontsize=12)
 # set the layout
 plt.tight_layout()
 # save the plot
@@ -183,11 +188,11 @@ plt.savefig('figures/script4_out_wekaPlot.png', dpi=300)
 print('new cell:\n--------------------------------------------------------------------------------------------')
 print('Hyperparameter tuning via GridSearchCV...\n')
 
-# set the random state for reproducibility
-np.random.seed(0)
+# # set the random state for reproducibility
+# np.random.seed(0)
 
-# initialize the model (in a pipeline to scale the data such that data leakage does not occur)
-pipeline_rfReg = make_pipeline(StandardScaler(),RandomForestRegressor(random_state=0))
+# # initialize the model (in a pipeline to scale the data such that data leakage does not occur)
+# pipeline_rfReg = make_pipeline(StandardScaler(),RandomForestRegressor(random_state=0))
 
 # make lists for possible values for hyperparameters
 rfReg_n_estimators_totest = [1, 5, 10, 50, 100, 500, 1000]  # number of trees in forest
@@ -196,29 +201,30 @@ rfReg_min_sample_leaf_totest = [1, 5, 10, 50]               # minimum number of 
 rfReg_min_sample_split_totest = [2, 4, 8, 10]               # minimum number of samples required to be at a leaf node
 rfReg_max_features_totest = [1/4, 1/3, 1/2, 2/3, 3/4, 1]    # number of features to consider when looking for the best split
 
-# put those lists into a dictionary to pass into GridSearchCV
-rfRegParamsGrid = {'randomforestregressor__n_estimators'        :rfReg_n_estimators_totest,
-                   'randomforestregressor__max_depth'           :rfReg_max_depth_totest,
-                   'randomforestregressor__min_samples_leaf'    :rfReg_min_sample_leaf_totest,
-                   'randomforestregressor__min_samples_split'   :rfReg_min_sample_split_totest,
-                   'randomforestregressor__max_features'        :rfReg_max_features_totest}
+# # put those lists into a dictionary to pass into GridSearchCV
+# rfRegParamsGrid = {'randomforestregressor__n_estimators'        :rfReg_n_estimators_totest,
+#                    'randomforestregressor__max_depth'           :rfReg_max_depth_totest,
+#                    'randomforestregressor__min_samples_leaf'    :rfReg_min_sample_leaf_totest,
+#                    'randomforestregressor__min_samples_split'   :rfReg_min_sample_split_totest,
+#                    'randomforestregressor__max_features'        :rfReg_max_features_totest}
 
-# make the grid search object - to comment out once the grid search has been run
-hpt_rfReg = GridSearchCV(pipeline_rfReg,
-                         rfRegParamsGrid,
-                         scoring = 'neg_mean_absolute_error',
-                         cv = 10,
-                         return_train_score = True, 
-                         n_jobs = 20)
+# # make the grid search object - to comment out once the grid search has been run
+# hpt_rfReg = GridSearchCV(pipeline_rfReg,
+#                          rfRegParamsGrid,
+#                          scoring = 'neg_mean_absolute_error',
+#                          cv = 10,
+#                          return_train_score = True, 
+#                          n_jobs = 20)
 
-# fit the grid search object to the training data
-hpt_rfReg.fit(dfTrain_x, srTrain_y)
+# # fit the grid search object to the training data
+# hpt_rfReg.fit(dfTrain_x, srTrain_y)
 
-# make the results into a dataframe
-dfHPT_rfReg = pd.DataFrame(hpt_rfReg.cv_results_)
+# # make the results into a dataframe
+# dfHPT_rfReg = pd.DataFrame(hpt_rfReg.cv_results_)
 
-# save the results of the grid search to a csv file
-dfHPT_rfReg.to_csv('data/script4_out_hpt.csv', index=False)
+# # save the results of the grid search to a csv file
+# dfHPT_rfReg.to_csv('data/script4_out_hpt.csv', index=False)
+dfHPT_rfReg = pd.read_csv('data/script4_out_hpt.csv')
 
 print('Hyperparameter tuning complete')
 print('--------------------------------------------------------------------------------------------\n')
@@ -315,48 +321,51 @@ plt.savefig('figures/script4_out_hpt.png', dpi=300)
 print('new cell:\n--------------------------------------------------------------------------------------------')
 print('Starting \'production run\' with 10 runs with different random seeds on the model with the best hyperparameters...\n')
 
-# the same random seeds used for the WEKA production run will be used here
+# # the same random seeds used for the WEKA production run will be used here
 
-# initialize a dataframe to store the predictions for each random seed
-dfTest_yPred_best = pd.DataFrame()
-dfTest_yPred_best['strComposition'] = lstTestCompositions
+# # initialize a dataframe to store the predictions for each random seed
+# dfTest_yPred_best = pd.DataFrame()
+# dfTest_yPred_best['strComposition'] = lstTestCompositions
 
-# initialize a counter to keep track of the number of runs
-runCount = 1
+# # initialize a counter to keep track of the number of runs
+# runCount = 1
 
-for randomSeed in lstRandomSeeds:
-      print('Run ', runCount, ' of 10')
-      # make the random forest regressor
-      rfReg_best_temp = RandomForestRegressor(n_estimators = rfReg_n_estimators_best,
-                                              max_depth = rfReg_max_depth_best, 
-                                              min_samples_leaf = rfReg_min_samples_leaf_best,
-                                              min_samples_split = rfReg_min_samples_split_best,
-                                              max_features = rfReg_max_features_best,
-                                              random_state = randomSeed)
-      # fit the model to the training data
-      rfReg_best_temp_fit = rfReg_best_temp.fit(dfTrain_x_std, srTrain_y)
-      # predict the bandgap of the test set
-      srTest_yPred_best_temp = pd.Series(rfReg_best_temp_fit.predict(dfTest_x_std), index = dfTest_x.index)
+# for randomSeed in lstRandomSeeds:
+#       print('Run ', runCount, ' of 10')
+#       # make the random forest regressor
+#       rfReg_best_temp = RandomForestRegressor(n_estimators = rfReg_n_estimators_best,
+#                                               max_depth = rfReg_max_depth_best, 
+#                                               min_samples_leaf = rfReg_min_samples_leaf_best,
+#                                               min_samples_split = rfReg_min_samples_split_best,
+#                                               max_features = rfReg_max_features_best,
+#                                               random_state = randomSeed)
+#       # fit the model to the training data
+#       rfReg_best_temp_fit = rfReg_best_temp.fit(dfTrain_x_std, srTrain_y)
+#       # predict the bandgap of the test set
+#       srTest_yPred_best_temp = pd.Series(rfReg_best_temp_fit.predict(dfTest_x_std), index = dfTest_x.index)
 
-      # add the predictions to the dataframe
-      dfTest_yPred_best['Seed:' + str(randomSeed)] = srTest_yPred_best_temp
-      # increment the counter
-      runCount += 1
+#       # add the predictions to the dataframe
+#       dfTest_yPred_best['Seed:' + str(randomSeed)] = srTest_yPred_best_temp
+#       # increment the counter
+#       runCount += 1
 
-# calculate the mean of the predictions for each random seed and make it a new column in the dataframe
-dfTest_yPred_best['mean'] = dfTest_yPred_best.iloc[:, 1:].mean(axis=1)
-# find the max of each prediction and make it a new column in the dataframe
-dfTest_yPred_best['max'] = dfTest_yPred_best.iloc[:, 1:].max(axis=1)
-# find the min of each prediction and make it a new column in the dataframe
-dfTest_yPred_best['min'] = dfTest_yPred_best.iloc[:, 1:].min(axis=1)
-# find the difference between the max and mean and make it a new column in the dataframe
-dfTest_yPred_best['max-mean'] = dfTest_yPred_best['max'] - dfTest_yPred_best['mean']
-# find the difference between the mean and min and make it a new column in the dataframe
-dfTest_yPred_best['mean-min'] = dfTest_yPred_best['mean'] - dfTest_yPred_best['min']
-print('Production run with the best hyperparameters complete')
+# # calculate the mean of the predictions for each random seed and make it a new column in the dataframe
+# dfTest_yPred_best['mean'] = dfTest_yPred_best.iloc[:, 1:].mean(axis=1)
+# # find the max of each prediction and make it a new column in the dataframe
+# dfTest_yPred_best['max'] = dfTest_yPred_best.iloc[:, 1:].max(axis=1)
+# # find the min of each prediction and make it a new column in the dataframe
+# dfTest_yPred_best['min'] = dfTest_yPred_best.iloc[:, 1:].min(axis=1)
+# # find the difference between the max and mean and make it a new column in the dataframe
+# dfTest_yPred_best['max-mean'] = dfTest_yPred_best['max'] - dfTest_yPred_best['mean']
+# # find the difference between the mean and min and make it a new column in the dataframe
+# dfTest_yPred_best['mean-min'] = dfTest_yPred_best['mean'] - dfTest_yPred_best['min']
+# print('Production run with the best hyperparameters complete')
 
-# save the dataframe to a csv file
-dfTest_yPred_best.to_csv('data/script4_out_test_yPred_best.csv', index=False)
+# # save the dataframe to a csv file
+# dfTest_yPred_best.to_csv('data/script4_out_test_yPred_best.csv', index=False)
+# read the results
+dfTest_yPred_best = pd.read_csv('data/script4_out_test_yPred_best.csv')
+print('Results from \'production run\' are complete')
 print('--------------------------------------------------------------------------------------------\n')
 
 #%%
@@ -372,27 +381,31 @@ print('The mean absolute error of the model is: ', bestMAE)
 # PLOT THE RESULTS-----------------------------------------------------------------------------------------------------
 
 # setup subplot with 1 row and 1 column
-fig, ax = plt.subplots(1, 1, figsize=(7, 5), facecolor='w', edgecolor='k')
+fig, ax = plt.subplots(1, 1, figsize=(6, 6), facecolor='w', edgecolor='k')
 
 # plot the true bandgap values vs the strComposition
-ax.scatter(range(len(srTest_y)), srTest_y, color='tab:blue', label='True bandgap')
+ax.scatter(range(len(srTest_y)), srTest_y, color='tab:blue', s = 50, label='True bandgap')
 # plot the predicted bandgap values vs the strComposition with error bars
-ax.errorbar(range(len(srTest_y)), dfTest_yPred_best['mean'], yerr=[dfTest_yPred_best['mean-min'], dfTest_yPred_best['max-mean']], color='tab:orange', label='Predicted bandgap', fmt='o', capsize=5)
+ax.errorbar(range(len(srTest_y)), dfTest_yPred_best['mean'], yerr=[dfTest_yPred_best['mean-min'], dfTest_yPred_best['max-mean']], 
+            color='tab:orange', label='Predicted bandgap', fmt='o', capsize=5, capthick=2, elinewidth=2, ms=7.5)
 
 # set the x and y axis labels
-ax.set_xlabel('Composition', fontsize=12)
+ax.set_xlabel('Composition', fontsize=14, weight='bold')
 # make the x ticks the composition
 ax.set_xticks(range(len(srTest_y)))
-ax.set_xticklabels(lstTestCompositions, rotation=90, fontsize=12)
-ax.set_ylabel('Bandgap (eV)', fontsize=12)
-ax.set_yticklabels(ax.get_yticks(), fontsize=12)
+ax.set_xticklabels(lstTestCompositions, rotation=45, fontsize=12, weight='bold')
+
+ax.set_ylabel('Bandgap (eV)', fontsize=14, weight='bold')
+ax.set_yticklabels(ax.get_yticks(), fontsize=12, weight='bold')
 ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 # set the title
-ax.set_title('True vs Predicted Bandgap (Best model)', fontsize=14)
+ax.set_title('Tunned model', fontsize=16, weight='bold')
 
 # add a legend
-ax.legend()
+# ax.legend(loc='lower left', fontsize=12)
 # set the layout
 plt.tight_layout()
 # save the plot
 plt.savefig('figures/script4_out_bestPlot.png', dpi=300)
+
+# %%
